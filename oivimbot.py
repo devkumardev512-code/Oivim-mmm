@@ -3,6 +3,22 @@ from telebot import types as _t_p
 import os
 import io
 import urllib.parse
+from threading import Thread
+from flask import Flask
+
+# Flask app taaki Render ka port requirement pura ho jaye
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Oivim Middleman Bot is Alive!"
+
+def run_web():
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+
+def keep_alive():
+    t = Thread(target=run_web)
+    t.start()
 
 try:
     import qrcode
@@ -10,8 +26,8 @@ try:
 except ImportError:
     HAS_QR = False
 
-_T_K = os.getenv('BOT_TOKEN', '9215549588:AAHMVHgkivR2G0y0T-wSH4LQzdTjv4RqHN4')          
-_UPI_ID = os.getenv('UPI_ID', 'brodmm09@nyes') 
+_T_K = os.getenv('BOT_TOKEN', 'YOUR_BOT_TOKEN_HERE')          
+_UPI_ID = os.getenv('UPI_ID', 'yourupiid@upi') 
 _A_I = 8904326919                   
 
 _b_t = _t_b.TeleBot(_T_K)
@@ -395,5 +411,8 @@ def _h_b(_m_g):
     
     _b_t.reply_to(_m_g, f"📢 **BROADCASTED:**\n\n{_m_b}", parse_mode='Markdown')
 
-print("Oivim Middleman Bot is online...")
-_b_t.infinity_polling()
+if __name__ == "__main__":
+    keep_alive()
+    print("Oivim Middleman Bot is online with Web Server...")
+    _b_t.infinity_polling()
+        
