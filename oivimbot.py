@@ -39,7 +39,8 @@ _b_s = {
     "total_deals": 0,
     "successful_deals": 0,
     "canceled_deals": 0,
-    "vouches_count": 0
+    "vouches_count": 0,
+    "last_deal_amount": "100₹"  # Dynamic amount memory
 }
 
 def _calculate_fee(_amt):
@@ -90,6 +91,9 @@ def _h_calc(_m_g):
         _amt = float(_a_s[1])
         _fee = _calculate_fee(_amt)
         _total_pay = _amt + _fee
+        
+        # Amount memory mein save ho raha hai
+        _b_s["last_deal_amount"] = f"{int(_amt)}₹"
         
         _upi_link = f"upi://pay?pa={_UPI_ID}&pn=Oivim%20MM&am={_total_pay:.2f}&cu=INR"
         
@@ -176,6 +180,10 @@ def _h_n(_m_g):
 
     _i_n = _a_s[1]
     _p_c = _a_s[2]
+    
+    # Newtrade se bhi amount memory update ho jayegi
+    _b_s["last_deal_amount"] = _p_c if _p_c.endswith('₹') else f"{_p_c}₹"
+
     _t_i = _t_c
     _t_c += 1
 
@@ -248,21 +256,28 @@ def _h_received(_m_g):
     )
     _b_t.send_message(_m_g.chat.id, _c_t, parse_mode='Markdown')
 
-# 7. RELEASE
+# 7. RELEASE (Dual-Message: Easy Tap-to-Copy Vouch Code)
 @_b_t.message_handler(commands=['release', 'realse'])
 def _h_release(_m_g):
+    deal_amt = _b_s["last_deal_amount"]  # Memory se amount uthayega
     _t_d.clear()
     _b_s["successful_deals"] += 1
     _b_s["vouches_count"] += 1  
 
+    # 1. Main Release Message
     _l_t = (
-        "✅ **DEAL RELEASED**\n\n"
-        "Both parties ki verification successfully complete ho gayi hai.\n\n"
-        "Transaction officially completed!\n\n"
-        "Thank you for using our Middleman Service.\n\n"
-        "👤 MM: @oivim"
+        f"✅ **DEAL RELEASED**\n\n"
+        f"Both parties ki verification successfully complete ho gayi hai.\n\n"
+        f"Transaction officially completed!\n\n"
+        f"⭐ Total Vouches: `{_b_s['vouches_count']}`\n\n"
+        f"Thank you for using our Middleman Service.\n\n"
+        f"👤 MM: @oivim"
     )
     _b_t.send_message(_m_g.chat.id, _l_t, parse_mode='Markdown')
+
+    # 2. Alag Message jisse user ek tap mein sirf vouch text copy kar sake
+    vouch_code = f"I Vouch @oivim For MM'D {deal_amt}"
+    _b_t.send_message(_m_g.chat.id, f"```text\n{vouch_code}\n```", parse_mode='Markdown')
 
 # 8. CANCEL
 @_b_t.message_handler(commands=['cancel'])
@@ -360,11 +375,12 @@ def _h_ru(_m_g):
         "5. Har transaction mein proper verification mandatory hai.\n\n"
         "⚠️ Stay Safe | Trade Smart"
     )
-    _b_t.reply_to(_m_g, _r_t, parse_mode='Markdown')
+    _b_t.send_message(_m_g.chat.id, _r_t, parse_mode='Markdown')
 
 # 13. VOUCH
 @_b_t.message_handler(commands=['vouch'])
 def _h_v(_m_g):
+    deal_amt = _b_s["last_deal_amount"]
     _h_t = (
         "⭐ **VOUCH CONFIRMATION**\n\n"
         "Deal successfully completed!\n"
@@ -372,7 +388,7 @@ def _h_v(_m_g):
     )
     _b_t.send_message(_m_g.chat.id, _h_t, parse_mode='Markdown')
     
-    _v_o = "I Vouch @oivim For MM'D"
+    _v_o = f"I Vouch @oivim For MM'D {deal_amt}"
     _b_t.send_message(_m_g.chat.id, f"```text\n{_v_o}\n```", parse_mode='Markdown')
 
 # 14. QR STATIC
@@ -413,6 +429,6 @@ def _h_b(_m_g):
 
 if __name__ == "__main__":
     keep_alive()
-    print("Oivim Middleman Bot is online with Web Server...")
+    print("Oivim Middleman Bot is online with Easy Copy Vouch Feature...")
     _b_t.infinity_polling()
-        
+    
